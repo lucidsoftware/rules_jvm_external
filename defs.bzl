@@ -23,7 +23,8 @@ def maven_install(
         artifacts = [],
         fail_on_missing_checksum = True,
         fetch_sources = False,
-        use_unsafe_shared_cache = False):
+        use_unsafe_shared_cache = False,
+        alias = True):
 
     repositories_json_strings = []
     for repository in parse.parse_repository_spec_list(repositories):
@@ -40,6 +41,7 @@ def maven_install(
         fail_on_missing_checksum = fail_on_missing_checksum,
         fetch_sources = fetch_sources,
         use_unsafe_shared_cache = use_unsafe_shared_cache,
+        alias = alias,
     )
 
 def artifact(a, repository_name = DEFAULT_REPOSITORY_NAME):

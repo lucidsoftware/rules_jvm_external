@@ -114,6 +114,8 @@ def _get_reverse_deps(coord, dep_tree):
 #
 # Made function public for testing.
 def generate_imports(repository_ctx, dep_tree, neverlink_artifacts = {}):
+    # If this is false, use versionless target_label and don't generate the alias
+    is_alias = repository_ctx.attr.alias
     # The list of java_import/aar_import declaration strings to be joined at the end
     all_imports = []
 
@@ -183,7 +185,10 @@ def generate_imports(repository_ctx, dep_tree, neverlink_artifacts = {}):
             # java_import(
             # 	name = "org_hamcrest_hamcrest_library_1_3",
             #
-            target_import_string.append("\tname = \"%s\"," % target_label)
+            if is_alias:
+                target_import_string.append("\tname = \"%s\"," % target_label)
+            else:
+                target_import_string.append("\tname = \"%s\"," % _escape(_strip_packaging_and_classifier_and_version(artifact["coord"])))
 
             # 3. Generate the jars/aar attribute to the relative path of the artifact.
             #    Optionally generate srcjar attr too.
@@ -217,7 +222,10 @@ def generate_imports(repository_ctx, dep_tree, neverlink_artifacts = {}):
             # same list of dependencies.
             target_import_labels = []
             for dep in artifact["dependencies"]:
-                dep_target_label = _escape(_strip_packaging_and_classifier(dep))
+                if is_alias:
+                    dep_target_label = _escape(_strip_packaging_and_classifier(dep))
+                else:
+                    dep_target_label = _escape(_strip_packaging_and_classifier_and_version(dep))
                 target_import_labels.append("\t\t\":%s\",\n" % dep_target_label)
             target_import_labels = _deduplicate_list(target_import_labels)
 
@@ -275,8 +283,9 @@ def generate_imports(repository_ctx, dep_tree, neverlink_artifacts = {}):
             #   name = "org_hamcrest_hamcrest_library",
             #   actual = "org_hamcrest_hamcrest_library_1_3",
             # )
-            versionless_target_alias_label = _escape(_strip_packaging_and_classifier_and_version(artifact["coord"]))
-            all_imports.append("alias(\n\tname = \"%s\",\n\tactual = \"%s\",\n)" % (versionless_target_alias_label, target_label))
+            if is_alias:
+                versionless_target_alias_label = _escape(_strip_packaging_and_classifier_and_version(artifact["coord"]))
+                all_imports.append("alias(\n\tname = \"%s\",\n\tactual = \"%s\",\n)" % (versionless_target_alias_label, target_label))
 
         elif artifact_path == None and POM_ONLY_ARTIFACTS.get(_strip_packaging_and_classifier_and_version(artifact["coord"])):
             # Special case for certain artifacts that only come with a POM file. Such artifacts "aggregate" their dependencies,
@@ -564,6 +573,7 @@ coursier_fetch = repository_rule(
         "fail_on_missing_checksum": attr.bool(default = True),
         "fetch_sources": attr.bool(default = False),
         "use_unsafe_shared_cache": attr.bool(default = False),
+        "alias": attr.bool(default = True),
     },
     environ = [
         "JAVA_HOME",
