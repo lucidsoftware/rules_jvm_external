@@ -72,6 +72,6 @@ def get_classifier(coord):
         return None
 
 def escape(string):
-    for char in [".", "-", ":", "/", "+"]:
+    for char in [":", "/", "+"]:
         string = string.replace(char, "_")
     return string.replace("[", "").replace("]", "").split(",")[0]

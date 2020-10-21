@@ -145,7 +145,7 @@ def maven_artifact(a):
     return artifact(a, repository_name = DEFAULT_REPOSITORY_NAME)
 
 def _escape(string):
-    return string.replace(".", "_").replace("-", "_").replace(":", "_")
+    return string.replace(":", "_")
 
 def _parse_artifact_str(artifact_str):
     pieces = artifact_str.split(":")

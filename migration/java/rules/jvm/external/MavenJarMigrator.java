@@ -24,7 +24,6 @@ public class MavenJarMigrator {
   // e.g. com.google.guava:guava:28.0-jre -> @maven//:com_google_guava_guava
   private static final Function<String, String> convertCoordinateToNewLabel =
       (String coordinate) -> {
-        coordinate = coordinate.replace("-", "_").replace(".", "_");
         String[] parts = coordinate.split(":");
         return "@maven//:" + Joiner.on("_").join(parts[0], parts[1]);
       };
