@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 
-load("//third_party/bazel_json/lib:json_parser.bzl", "json_parse")
 load("//private/rules:jetifier.bzl", "jetify_artifact_dependencies", "jetify_maven_coord")
 load("//:specs.bzl", "maven", "parse", "utils")
 load("//:private/proxy.bzl", "get_java_proxy_args")
@@ -274,31 +273,22 @@ def _pinned_coursier_fetch_impl(repository_ctx):
 
     artifacts = []
     for a in repository_ctx.attr.artifacts:
-        artifacts.append(json_parse(a))
+        artifacts.append(json.decode(a))
 
     # Read Coursier state from maven_install.json.
     repository_ctx.symlink(
         repository_ctx.path(repository_ctx.attr.maven_install_json),
         repository_ctx.path("imported_maven_install.json"),
     )
-    maven_install_json_content = json_parse(
+    maven_install_json_content = json.decode(
         repository_ctx.read(
             repository_ctx.path("imported_maven_install.json"),
         ),
-        fail_on_invalid = False,
     )
 
     # Validation steps for maven_install.json.
 
-    # First, validate that we can parse the JSON file.
-    if maven_install_json_content == None:
-        fail("Failed to parse %s. Is this file valid JSON? The file may have been corrupted." % repository_ctx.path(repository_ctx.attr.maven_install_json) +
-             "Consider regenerating maven_install.json with the following steps:\n" +
-             "  1. Remove the maven_install_json attribute from your `maven_install` declaration for `@%s`.\n" % repository_ctx.name +
-             "  2. Regenerate `maven_install.json` by running the command: bazel run @%s//:pin" % repository_ctx.name +
-             "  3. Add `maven_install_json = \"//:maven_install.json\"` into your `maven_install` declaration.")
-
-    # Then, validate that there's a dependency_tree element in the parsed JSON.
+    # First, validate that there's a dependency_tree element in the parsed JSON.
     if maven_install_json_content.get("dependency_tree") == None:
         fail("Failed to parse %s. " % repository_ctx.path(repository_ctx.attr.maven_install_json) +
              "It is not a valid maven_install.json file. Has this " +
@@ -600,7 +590,7 @@ def make_coursier_dep_tree(
     if (exec_result.return_code != 0):
         fail("Error while fetching artifact with coursier: " + exec_result.stderr)
 
-    return _deduplicate_artifacts(json_parse(repository_ctx.read(repository_ctx.path(
+    return _deduplicate_artifacts(json.decode(repository_ctx.read(repository_ctx.path(
         "dep-tree.json"))))
 
 def _download_jq(repository_ctx):
@@ -641,15 +631,15 @@ def _coursier_fetch_impl(repository_ctx):
     # Deserialize the spec blobs
     repositories = []
     for repository in repository_ctx.attr.repositories:
-        repositories.append(json_parse(repository))
+        repositories.append(json.decode(repository))
 
     artifacts = []
     for a in repository_ctx.attr.artifacts:
-        artifacts.append(json_parse(a))
+        artifacts.append(json.decode(a))
 
     excluded_artifacts = []
     for a in repository_ctx.attr.excluded_artifacts:
-        excluded_artifacts.append(json_parse(a))
+        excluded_artifacts.append(json.decode(a))
 
     # Once coursier finishes a fetch, it generates a tree of artifacts and their
     # transitive dependencies in a JSON file. We use that as the source of truth

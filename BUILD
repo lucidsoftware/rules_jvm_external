@@ -47,7 +47,6 @@ bzl_library(
         "//private/rules:maven_publish.bzl",
         "//private/rules:pom_file.bzl",
         "//settings:stamp_manifest.bzl",
-        "//third_party/bazel_json/lib:json_parser.bzl",
         ":coursier.bzl",
         ":defs.bzl",
         ":specs.bzl",
