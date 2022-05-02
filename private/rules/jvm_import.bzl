@@ -59,7 +59,7 @@ def _jvm_import_impl(ctx):
             files = depset([outjar]),
         ),
         JavaInfo(
-            compile_jar = compilejar,
+            compile_jar = outjar,
             output_jar = outjar,
             source_jar = ctx.file.srcjar,
             deps = [
